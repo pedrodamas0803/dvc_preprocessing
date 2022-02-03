@@ -215,10 +215,10 @@ def crop_around_CoM(image, CoM: tuple, slices='all'):
     xcom = CoM[1]
     ycom = CoM[0]
 
-    xmin = xcom - (xlen * 0.40)
-    xmax = xcom + (xlen * 0.40)
-    ymin = ycom - (ylen * 0.25)
-    ymax = ycom + (ylen * 0.25)
+    xmin = xcom - (xlen * 0.3)
+    xmax = xcom + (xlen * 0.3)
+    ymin = ycom - (ylen * 0.4)
+    ymax = ycom + (ylen * 0.4)
 
     if xmin < 0:
         xmin = 0
@@ -305,6 +305,7 @@ def auto_processing(filename, dirpath='./', data_type=np.int16, init_slice=0, fi
         final_slice = stack.shape[0]
 
     CoM = volume_CoM(stack, init_slice, final_slice)
+    print(f'The center of mass is {CoM}')
 
     if init_slice != 0 or final_slice != "last":
         stack = crop_around_CoM(stack, CoM, (init_slice, final_slice))
