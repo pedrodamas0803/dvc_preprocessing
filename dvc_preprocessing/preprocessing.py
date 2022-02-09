@@ -20,8 +20,6 @@ Routine to preprocess PCT reconstructions to perform DVC analysis
 
 """
 
-
-# get the image from its path
 def read_images_from_h5(filename, data_type=np.int16, dirpath="./"):
     """
     Returns the stack image of the reconstructed volume
@@ -43,60 +41,6 @@ def read_images_from_h5(filename, data_type=np.int16, dirpath="./"):
 
     return stack_img.astype(data_type)
 
-
-# plot selected slice
-
-def plot_slice_from_stack(image, slice_number=None, colormap="gray", figsize=FIGSIZE):
-    '''
-    Function to plot the selected slice from the stack image. 
-
-    Inputs
-
-    image - the stack image from which the slice will be drawn
-    slice_number - well, you can guess what this is. By default (slice_number = None) it will choose the middle slice
-    colormap - a color map to be used in the plot. It has to be consistent with the possible values within matplotlib
-    '''
-
-    if slice_number == None:
-        if len(image[:]) > 1:
-            slice_number = int(len(image[:])/2)
-
-    plt.figure(figsize=figsize)
-    plt.imshow(image[slice_number], cmap=colormap)
-    plt.title(f"Plot of slice {slice_number}")
-    plt.show()
-
-
-def plot_image(image, colormap="gray", name="sample", figsize=FIGSIZE):
-
-    plt.figure(figsize=figsize)
-    plt.imshow(image, cmap=colormap)
-    plt.title(name)
-    plt.show()
-
-# plot stack histogram
-
-
-def plot_histogram(image, hist=False):
-    '''
-    Plots the intensity histogram for the stack image
-
-    Input
-
-    image - stack image 
-    '''
-
-    counts, bins = exposure.histogram(image)
-    plt.figure(figsize=FIGSIZE)
-    plt.plot(bins, counts, color="red")
-    plt.title("Histogram of stack image")
-    plt.show()
-
-    if hist == True:
-        return counts, bins
-
-
-# crop the images
 
 def crop_slice(image, slice_number, xmin, xmax, ymin, ymax):
     '''
@@ -239,23 +183,6 @@ def crop_around_CoM(image, CoM: tuple, slices='all'):
     return image[start:end, ymin:ymax, xmin:xmax]
 
 
-def plot_CoM(image, CoM: tuple):
-    '''
-    Plots the original slice displaying the coordinates of the center of mass.
-
-    Inputs
-    image - again, the slice! 
-    CoM - a tuple containing the center of mass (ideally calculated by volume_CoM() for the volume or find_center_of_mass() for a single slice)
-
-    Outputs
-    Display the image of a given slice and the coordinates of CoM
-    '''
-
-    fig, ax = plt.subplots()
-    ax.imshow(image)
-    ax.scatter(CoM[1], CoM[0], s=160, c='C0', marker='+')
-    plt.show()
-
 
 def save_3d_tiff(image, filename="output", path="./"):
     '''
@@ -284,35 +211,4 @@ def save_3d_subset_tiff(image, init_slice, end_slice, filename, path="./"):
         path, f"{filename}_{x}_{y}_{z}.tiff"), arr=image_3d, plugin="tifffile")
 
 
-def auto_processing(filename, dirpath='./', data_type=np.int16, init_slice=0, final_slice="last", outname="output", ret="True"):
-    '''
-    TODO: add outpath
-    '''
 
-    stack = read_images_from_h5(filename, data_type, dirpath)
-
-    threshold_value = filters.threshold_otsu(stack)
-    print(f'Threshold value: {threshold_value}.')
-
-    stack = intensity_rescaling(stack)
-
-    if data_type == np.int8:
-        stack[stack < threshold_value] = INT8MINVAL
-    else:
-        stack[stack < threshold_value] = INT16MINVAL
-
-    if final_slice == "last":
-        final_slice = stack.shape[0]
-
-    CoM = volume_CoM(stack, init_slice, final_slice)
-    print(f'The center of mass is {CoM}')
-
-    if init_slice != 0 or final_slice != "last":
-        stack = crop_around_CoM(stack, CoM, (init_slice, final_slice))
-    else:
-        stack = crop_around_CoM(stack, CoM)
-
-    save_3d_tiff(stack, outname, dirpath)
-
-    if ret == True:
-        return stack, CoM, threshold_value
