@@ -18,6 +18,7 @@ Routine to preprocess PCT reconstructions to perform DVC analysis
 
 """
 
+
 def read_images_from_h5(filename, data_type=np.int16, dirpath="./"):
     """
     Returns the stack image of the reconstructed volume
@@ -127,7 +128,7 @@ def volume_CoM(image, init_slice=0, final_slice='last'):
 
     for i, img in enumerate(range(init_slice, final_slice)):
 
-        center = find_center_of_mass(image[img])
+        center = _find_center_of_mass(image[img])
         x[i] = center[1]
         y[i] = center[0]
 
@@ -180,44 +181,44 @@ def crop_around_CoM(image, CoM: tuple, slices='all'):
 
     return image[start:end, ymin:ymax, xmin:xmax]
 
+
 def get_vectors(image):
-    
-    
-    square.astype(int)
-    result=corner_peaks(corner_fast(square, 1), min_distance=100)
-    for item in result:
-        plt.scatter(item[0], item[1], marker='x')
-    plt.imshow(square)
-    plt.show()
-    
 
-#         >>> from skimage.feature import corner_fast, corner_peaks, canny
-#     from skimage.filters import _median
-#     # >>> square = np.zeros((1200, 1200))
-#     # >>> square[100:1000, 100:1000] = 1
-#     # >>> square.astype(int)
+    # square.astype(int)
+    # result=corner_peaks(corner_fast(square, 1), min_distance=100)
+    # for item in result:
+    #     plt.scatter(item[0], item[1], marker='x')
+    # plt.imshow(square)
+    # plt.show()
 
+    #         >>> from skimage.feature import corner_fast, corner_peaks, canny
+    #     from skimage.filters import _median
+    #     # >>> square = np.zeros((1200, 1200))
+    #     # >>> square[100:1000, 100:1000] = 1
+    #     # >>> square.astype(int)
 
-#     >>> from skimage.morphology import disk
-#     >>> from skimage.filters import median
+    #     >>> from skimage.morphology import disk
+    #     >>> from skimage.filters import median
 
-#     mid_low=stack_low_crop.mean(axis=0)
-#     smth = median(mid_low, disk(10))
-#     edges2 = canny(smth, sigma=50)
-#     # mid_low=prp.crop_around_CoM(mid_low, CoM=prp.find_center_of_mass(mid_low))
-#     crn_fst = corner_fast(edges2, 1)
-#     result=corner_peaks(crn_fst, min_distance=100)
-#     # plt.figure(figsize=(20, 20))
-#     i=0
-#     for item in result:
-#         plt.scatter(item[1], item[0], marker="X")
-#         i += 1
-#         print(item)
-#         if i > 3:
-#             break
-#     plt.imshow(edges2)
-#     # plt.imshow(crn_fst)
-#     plt.show()    
+    #     mid_low=stack_low_crop.mean(axis=0)
+    #     smth = median(mid_low, disk(10))
+    #     edges2 = canny(smth, sigma=50)
+    #     # mid_low=prp.crop_around_CoM(mid_low, CoM=prp.find_center_of_mass(mid_low))
+    #     crn_fst = corner_fast(edges2, 1)
+    #     result=corner_peaks(crn_fst, min_distance=100)
+    #     # plt.figure(figsize=(20, 20))
+    #     i=0
+    #     for item in result:
+    #         plt.scatter(item[1], item[0], marker="X")
+    #         i += 1
+    #         print(item)
+    #         if i > 3:
+    #             break
+    #     plt.imshow(edges2)
+    #     # plt.imshow(crn_fst)
+    #     plt.show()
+    pass
+
 
 def save_3d_tiff(image, filename="output", path="./"):
     '''
@@ -244,6 +245,3 @@ def save_3d_subset_tiff(image, init_slice, end_slice, filename, path="./"):
     image_3d = skio.concatenate_images(image[init_slice:end_slice])
     skio.imsave(os.path.join(
         path, f"{filename}_{x}_{y}_{z}.tiff"), arr=image_3d, plugin="tifffile")
-
-
-
