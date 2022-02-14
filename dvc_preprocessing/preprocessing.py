@@ -86,7 +86,7 @@ def intensity_rescaling(image, low_perc=1, high_perc=99):
     return rescaled_image
 
 
-def _find_center_of_mass(image):
+def find_center_of_mass(image):
     '''
     Finds the center of mass of the image after applying Otsu's thresholding algorithm
 
@@ -128,7 +128,7 @@ def volume_CoM(image, init_slice=0, final_slice='last'):
 
     for i, img in enumerate(range(init_slice, final_slice)):
 
-        center = _find_center_of_mass(image[img])
+        center = find_center_of_mass(image[img])
         x[i] = center[1]
         y[i] = center[0]
 
@@ -158,10 +158,10 @@ def crop_around_CoM(image, CoM: tuple, slices='all'):
     xcom = CoM[1]
     ycom = CoM[0]
 
-    xmin = xcom - (xlen * 0.3)
-    xmax = xcom + (xlen * 0.3)
-    ymin = ycom - (ylen * 0.4)
-    ymax = ycom + (ylen * 0.4)
+    xmin = xcom - (xlen * 0.35)
+    xmax = xcom + (xlen * 0.35)
+    ymin = ycom - (ylen * 0.35)
+    ymax = ycom + (ylen * 0.35)
 
     if xmin < 0:
         xmin = 0

@@ -4,6 +4,7 @@
 def FIGSIZE():
     return (8, 4.5)
 
+
 def INT8MINVAL():
     return int(-128)
 

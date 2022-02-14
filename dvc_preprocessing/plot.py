@@ -5,7 +5,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import os
+from skimage import exposure
 from . import constants as const
+
 
 def plot_image(image, colormap="gray", name="sample", figsize=const.FIGSIZE()):
 
@@ -13,6 +15,7 @@ def plot_image(image, colormap="gray", name="sample", figsize=const.FIGSIZE()):
     plt.imshow(image, cmap=colormap)
     plt.title(name)
     plt.show()
+
 
 def plot_slice_from_stack(image, slice_number=None, colormap="gray", figsize=const.FIGSIZE()):
     '''
@@ -33,7 +36,8 @@ def plot_slice_from_stack(image, slice_number=None, colormap="gray", figsize=con
     plt.imshow(image[slice_number], cmap=colormap)
     plt.title(f"Plot of slice {slice_number}")
     plt.show()
-    
+
+
 def plot_histogram(image, hist=False, figsize=const.FIGSIZE()):
     '''
     Plots the intensity histogram for the stack image
@@ -51,7 +55,8 @@ def plot_histogram(image, hist=False, figsize=const.FIGSIZE()):
 
     if hist == True:
         return counts, bins
-    
+
+
 def plot_CoM(image, CoM: tuple):
     '''
     Plots the original slice displaying the coordinates of the center of mass.
@@ -68,5 +73,3 @@ def plot_CoM(image, CoM: tuple):
     ax.imshow(image)
     ax.scatter(CoM[1], CoM[0], s=160, c='C0', marker='+')
     plt.show()
-    
-
