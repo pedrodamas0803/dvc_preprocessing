@@ -8,11 +8,9 @@ import h5py
 import skimage.io as skio
 from skimage import exposure, filters
 from skimage.measure import regionprops
+from skimage.feature import corner_fast, corner_peaks
 import os
 
-FIGSIZE = (8, 4.5)
-INT8MINVAL = int(-128)
-INT16MINVAL = int(-32768)
 
 """
 
@@ -87,7 +85,7 @@ def intensity_rescaling(image, low_perc=1, high_perc=99):
     return rescaled_image
 
 
-def find_center_of_mass(image):
+def _find_center_of_mass(image):
     '''
     Finds the center of mass of the image after applying Otsu's thresholding algorithm
 
@@ -182,7 +180,44 @@ def crop_around_CoM(image, CoM: tuple, slices='all'):
 
     return image[start:end, ymin:ymax, xmin:xmax]
 
+def get_vectors(image):
+    
+    
+    square.astype(int)
+    result=corner_peaks(corner_fast(square, 1), min_distance=100)
+    for item in result:
+        plt.scatter(item[0], item[1], marker='x')
+    plt.imshow(square)
+    plt.show()
+    
 
+#         >>> from skimage.feature import corner_fast, corner_peaks, canny
+#     from skimage.filters import _median
+#     # >>> square = np.zeros((1200, 1200))
+#     # >>> square[100:1000, 100:1000] = 1
+#     # >>> square.astype(int)
+
+
+#     >>> from skimage.morphology import disk
+#     >>> from skimage.filters import median
+
+#     mid_low=stack_low_crop.mean(axis=0)
+#     smth = median(mid_low, disk(10))
+#     edges2 = canny(smth, sigma=50)
+#     # mid_low=prp.crop_around_CoM(mid_low, CoM=prp.find_center_of_mass(mid_low))
+#     crn_fst = corner_fast(edges2, 1)
+#     result=corner_peaks(crn_fst, min_distance=100)
+#     # plt.figure(figsize=(20, 20))
+#     i=0
+#     for item in result:
+#         plt.scatter(item[1], item[0], marker="X")
+#         i += 1
+#         print(item)
+#         if i > 3:
+#             break
+#     plt.imshow(edges2)
+#     # plt.imshow(crn_fst)
+#     plt.show()    
 
 def save_3d_tiff(image, filename="output", path="./"):
     '''

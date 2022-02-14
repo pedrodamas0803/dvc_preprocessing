@@ -3,18 +3,18 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotib.image as mpimg
+import matplotlib.image as mpimg
 import os
-from dvc_preprocessing.preprocessing import * as pp 
+from . import constants as const
 
-def plot_image(image, colormap="gray", name="sample", figsize=FIGSIZE):
+def plot_image(image, colormap="gray", name="sample", figsize=const.FIGSIZE()):
 
     plt.figure(figsize=figsize)
     plt.imshow(image, cmap=colormap)
     plt.title(name)
     plt.show()
 
-def plot_slice_from_stack(image, slice_number=None, colormap="gray", figsize=FIGSIZE):
+def plot_slice_from_stack(image, slice_number=None, colormap="gray", figsize=const.FIGSIZE()):
     '''
     Function to plot the selected slice from the stack image. 
 
@@ -34,7 +34,7 @@ def plot_slice_from_stack(image, slice_number=None, colormap="gray", figsize=FIG
     plt.title(f"Plot of slice {slice_number}")
     plt.show()
     
-def plot_histogram(image, hist=False):
+def plot_histogram(image, hist=False, figsize=const.FIGSIZE()):
     '''
     Plots the intensity histogram for the stack image
 
@@ -44,7 +44,7 @@ def plot_histogram(image, hist=False):
     '''
 
     counts, bins = exposure.histogram(image)
-    plt.figure(figsize=FIGSIZE)
+    plt.figure(figsize=figsize)
     plt.plot(bins, counts, color="red")
     plt.title("Histogram of stack image")
     plt.show()
