@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+from utils import create_summary
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
@@ -10,6 +11,7 @@ from skimage import exposure, filters
 from skimage.measure import regionprops
 from skimage.feature import corner_fast, corner_peaks
 import os
+import copy
 
 
 """
@@ -18,26 +20,50 @@ Routine to preprocess PCT reconstructions to perform DVC analysis
 
 """
 
-def read_images_from_h5(filename, data_type=np.int16, dirpath="./"):
-    """
-    Returns the stack image of the reconstructed volume
-    Ideally you should provide the hdf5 file provided after nabu volume reconstruction for data entry consistency.
-    Inputs
+class DVC_Volume:
 
-    filename - string with the h5 file name 
-    data_type - data type from the returned stack image, whether np.int8 or np.int16
-    dirpath - the directory where the h5 named 'filename' is found
+    def __init__(self, src_file, pixel_size, data_type=np.int16, sample_name="sample", summary=True, summ_dir=None, output_dir=None):
 
-    """
+        self.name = sample_name
+        self.src_file = src_file
+        self.pixel_size = pixel_size
+        
+        if data_type not in [np.int8, np.int16]:
+            raise Warning("Your data might not be suitable for DVC")
+            return
+        else:
+             self.data_type = data_type
 
-    if data_type not in [np.int8, np.int16]:
-        raise Warning("Your data might not be suitable for DVC")
-        return
+        if output_dir == None:
+            self.out_dir = src_file.strip(".") + self.name
+        else:
+            self.out_dir = output_dir
 
-    with h5py.File(os.path.join(dirpath, filename)) as h5:
-        stack_img = h5['entry0000']['reconstruction']['results']['data'][:]
+        self.volume = None
 
-    return stack_img.astype(data_type)
+        # if summary == True:
+        #     create_summary()
+
+
+
+    def read_images_from_h5(self):
+        """
+        TODO: transform it into an auxiliary function
+        Returns the stack image of the reconstructed volume
+        Ideally you should provide the hdf5 file provided after nabu volume reconstruction for data entry consistency.
+        Inputs
+
+        filename - string with the h5 file name 
+        data_type - data type from the returned stack image, whether np.int8 or np.int16
+        dirpath - the directory where the h5 named 'filename' is found
+
+        """
+
+        with h5py.File(self.src_file, mode = 'r') as h5:
+            stack_img = h5['entry0000']['reconstruction']['results']['data'][:]
+
+        self.volume = copy.deepcopy(stack_img)
+        return self.volume.astype(self.data_type)
 
 
 def crop_slice(image, slice_number, xmin, xmax, ymin, ymax):
@@ -181,44 +207,6 @@ def crop_around_CoM(image, CoM: tuple, slices='all'):
 
     return image[start:end, ymin:ymax, xmin:xmax]
 
-def get_vectors(image):
-    
-    
-    square.astype(int)
-    result=corner_peaks(corner_fast(square, 1), min_distance=100)
-    for item in result:
-        plt.scatter(item[0], item[1], marker='x')
-    plt.imshow(square)
-    plt.show()
-    
-
-#         >>> from skimage.feature import corner_fast, corner_peaks, canny
-#     from skimage.filters import _median
-#     # >>> square = np.zeros((1200, 1200))
-#     # >>> square[100:1000, 100:1000] = 1
-#     # >>> square.astype(int)
-
-
-#     >>> from skimage.morphology import disk
-#     >>> from skimage.filters import median
-
-#     mid_low=stack_low_crop.mean(axis=0)
-#     smth = median(mid_low, disk(10))
-#     edges2 = canny(smth, sigma=50)
-#     # mid_low=prp.crop_around_CoM(mid_low, CoM=prp.find_center_of_mass(mid_low))
-#     crn_fst = corner_fast(edges2, 1)
-#     result=corner_peaks(crn_fst, min_distance=100)
-#     # plt.figure(figsize=(20, 20))
-#     i=0
-#     for item in result:
-#         plt.scatter(item[1], item[0], marker="X")
-#         i += 1
-#         print(item)
-#         if i > 3:
-#             break
-#     plt.imshow(edges2)
-#     # plt.imshow(crn_fst)
-#     plt.show()    
 
 def save_3d_tiff(image, filename="output", path="./"):
     '''
