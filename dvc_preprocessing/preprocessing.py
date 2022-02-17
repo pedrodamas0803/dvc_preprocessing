@@ -184,10 +184,12 @@ def crop_around_CoM(image, CoM: tuple, slices='all', xprop = 0.25, yprop=0.25):
 
 
 def get_rotation_angle(image):
-
+    
+    CoM = _find_center_of_mass(image)
+    img = crop_around_CoM(image, CoM, xprop=0.9, yprop=0.9)
     # Line finding using the Probabilistic Hough Transform
-    image = copy.copy(image)
-    edges = canny(image, 50)
+    image = copy.copy(img)
+    edges = canny(img, 50)
     lines = probabilistic_hough_line(edges, threshold=5, line_length=20, 
                                     line_gap=3)
 

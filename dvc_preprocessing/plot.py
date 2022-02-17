@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import matplotlib.colors as cm
+from skimage import exposure
 import os
 from . import constants as const
 
