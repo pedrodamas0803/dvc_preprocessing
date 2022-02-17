@@ -136,7 +136,7 @@ def volume_CoM(image, init_slice=0, final_slice='last'):
     return np.mean(y), np.mean(x)
 
 
-def crop_around_CoM(image, CoM: tuple, slices='all'):
+def crop_around_CoM(image, CoM: tuple, slices='all', xprop = 0.25, yprop=0.25):
     '''
     This function will return the image of an slice cut with parameters relative to the calculated center of mass
 
