@@ -159,10 +159,10 @@ def crop_around_CoM(image, CoM: tuple, slices='all', xprop = 0.25, yprop=0.25):
     xcom = CoM[1]
     ycom = CoM[0]
 
-    xmin = xcom - (xlen * 0.3)
-    xmax = xcom + (xlen * 0.3)
-    ymin = ycom - (ylen * 0.4)
-    ymax = ycom + (ylen * 0.4)
+    xmin = xcom - (xlen * xprop)
+    xmax = xcom + (xlen * xprop)
+    ymin = ycom - (ylen * yprop)
+    ymax = ycom + (ylen * yprop)
 
     if xmin < 0:
         xmin = 0
