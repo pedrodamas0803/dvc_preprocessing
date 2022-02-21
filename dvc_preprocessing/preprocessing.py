@@ -198,53 +198,22 @@ def get_rotation_angle(image, plot=False):
     img = img[int(0.05*x):int(0.95*x), int(0.05*y):int(0.95*y)]
     lines = probabilistic_hough_line(edges, threshold=5, line_length=150,
                                      line_gap=10)
-    # exclude biggest horizontal lines
-    # Generating figure 2
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharex=True, sharey=True)
-    ax = axes.ravel()
-
-    ax[0].imshow(img, cmap="gray", )
-    ax[0].set_title('Input image')
-
-    ax[1].imshow(edges, cmap="gray")
-    ax[1].set_title('Canny edges')
-
-    # ax[2].imshow(edges * 0)
+    prob_angles = []
 
     for line in lines:
-        p0, p1 = line
-        ax[0].plot((p0[0], p1[0]), (p0[1], p1[1]))
-        ax[1].plot((p0[0], p1[0]), (p0[1], p1[1]))
+        y = line[1][1]-line[0][1]
+        x = line[1][0]-line[0][0]
+        vec = x, y
+        vec_norm = LA.norm(vec)
+        print(vec, vec_norm)
 
-    ax[0].set_xlim((0, img.shape[1]))
-    ax[0].set_ylim((img.shape[0], 0))
-    ax[0].set_title('Probabilistic Hough')
-
-    # for a in ax:
-    #     a.set_axis_off()
-
-    plt.tight_layout()
-    plt.show()
-
-
-prob_angles = []
-plt.figure()
-for line in lines:
-    y = line[1][1]-line[0][1]
-    x = line[1][0]-line[0][0]
-    vec = x, y
-    vec_norm = LA.norm(vec)
-#     plt.scatter(x, y)
-    print(vec, vec_norm)
-
-#     print(x, y)
-    if vec[0] != 0 and vec[1] != 0:
-        ang = (np.rad2deg(np.arctan(y/x)))
-        prob_angles.append(ang)
-#     else:
-#         prob_angles.append(0)
-    print(vec, vec_norm, ang)
-print(np.mean(prob_angles))
+        if vec[0] != 0 and vec[1] != 0:
+            ang = (np.rad2deg(np.arctan(y/x)))
+            prob_angles.append(ang)
+    #     else:
+    #         prob_angles.append(0)
+        print(vec, vec_norm, ang)
+    return (np.mean(prob_angles))
 
 
 def save_3d_tiff(image, filename="output", path="./"):
