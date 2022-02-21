@@ -2,14 +2,15 @@
 # coding: utf-8
 
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
+# import matplotlib.image as mpimg
 import numpy as np
 import h5py
 import skimage.io as skio
 from skimage import exposure, filters
 from skimage.measure import regionprops
-from skimage.feature import corner_fast, corner_peaks, canny
+from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
+from numpy import linalg as LA
 import os
 import copy
 
@@ -136,7 +137,7 @@ def volume_CoM(image, init_slice=0, final_slice='last'):
     return np.mean(y), np.mean(x)
 
 
-def crop_around_CoM(image, CoM: tuple, slices='all', xprop = 0.25, yprop=0.25):
+def crop_around_CoM(image, CoM: tuple, slices='all', xprop=0.25, yprop=0.25):
     '''
     This function will return the image of an slice cut with parameters relative to the calculated center of mass
 
@@ -186,42 +187,64 @@ def crop_around_CoM(image, CoM: tuple, slices='all', xprop = 0.25, yprop=0.25):
     return image[start:end, ymin:ymax, xmin:xmax]
 
 
-def get_rotation_angle(image):
-    
-    CoM = _find_center_of_mass(image)
-    img = crop_around_CoM(image, CoM, xprop=0.9, yprop=0.9)
-    # Line finding using the Probabilistic Hough Transform
-    image = copy.copy(img)
-    edges = canny(img, 50)
-    lines = probabilistic_hough_line(edges, threshold=5, line_length=20, 
-                                    line_gap=3)
+def get_rotation_angle(image, plot=False):
 
-    prob_angles = []
+    # Line finding using the Probabilistic Hough Transform
+    img = copy.deepcopy(image)
+    img = img.mean(axis=0)
+    edges = canny(img, 30)
+    x, y = edges.shape
+    edges = edges[int(0.05*x):int(0.95*x), int(0.05*y):int(0.95*y)]
+    img = img[int(0.05*x):int(0.95*x), int(0.05*y):int(0.95*y)]
+    lines = probabilistic_hough_line(edges, threshold=5, line_length=150,
+                                     line_gap=10)
+    # exclude biggest horizontal lines
+    # Generating figure 2
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharex=True, sharey=True)
+    ax = axes.ravel()
+
+    ax[0].imshow(img, cmap="gray", )
+    ax[0].set_title('Input image')
+
+    ax[1].imshow(edges, cmap="gray")
+    ax[1].set_title('Canny edges')
+
+    # ax[2].imshow(edges * 0)
 
     for line in lines:
-        y = line[1][1]-line[0][1]
-        x = line[1][0]-line[0][0]
-        
-    #     print(x, y)
-        if x != 0:
-            prob_angles.append(np.degrees(np.arctan(y/x)))
-        else:
-            prob_angles.append(0)
-        
-    print(prob_angles)
-    summ=0
-    cntr=0
-    for i, angle in enumerate(prob_angles):
-        print(f"Angle: {angle}")
-        if abs(angle) < 45 and abs(angle) > 0:
-            summ += angle
-            cntr =i
-    print(f"Angulo medio: {summ/cntr}")
+        p0, p1 = line
+        ax[0].plot((p0[0], p1[0]), (p0[1], p1[1]))
+        ax[1].plot((p0[0], p1[0]), (p0[1], p1[1]))
 
-    print(f"Original length:{len(prob_angles)}")
-    print(f"Counter: {cntr}")
+    ax[0].set_xlim((0, img.shape[1]))
+    ax[0].set_ylim((img.shape[0], 0))
+    ax[0].set_title('Probabilistic Hough')
+
+    # for a in ax:
+    #     a.set_axis_off()
+
+    plt.tight_layout()
+    plt.show()
 
 
+prob_angles = []
+plt.figure()
+for line in lines:
+    y = line[1][1]-line[0][1]
+    x = line[1][0]-line[0][0]
+    vec = x, y
+    vec_norm = LA.norm(vec)
+#     plt.scatter(x, y)
+    print(vec, vec_norm)
+
+#     print(x, y)
+    if vec[0] != 0 and vec[1] != 0:
+        ang = (np.rad2deg(np.arctan(y/x)))
+        prob_angles.append(ang)
+#     else:
+#         prob_angles.append(0)
+    print(vec, vec_norm, ang)
+print(np.mean(prob_angles))
 
 
 def save_3d_tiff(image, filename="output", path="./"):
