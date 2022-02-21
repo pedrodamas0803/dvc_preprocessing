@@ -146,11 +146,12 @@ def crop_around_CoM(image, CoM: tuple, slices='all', xprop=0.25, yprop=0.25):
     CoM - coordinates of the center of mass as a tuple
     slices - tuple containing the starting 
     '''
-    if image.shape == 3:
-        zlen, xlen, ylen = image.shape
-    else:
-        xlen, ylen = image.shape
-        zlen = 0
+    zlen, xlen, ylen = image.shape
+    #if image.shape == 3:
+    #   zlen, xlen, ylen = image.shape
+    #else:
+    #    xlen, ylen = image.shape
+    #    zlen = 0
 
     if slices != 'all':
         assert type(slices) == tuple
