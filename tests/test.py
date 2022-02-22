@@ -37,7 +37,7 @@ print("Your image is cropped! Check if you need new xprop/yprop")
 
 print("Calculating the rotation angle of your image.")
 angle = preprocessing.get_rotation_angle(stack_resc)
-print(f"The mean angle of rotation is: {angle}")
+print(f"The mean angle of rotation of {filename} is: {angle} degress")
 
 print("Now you can go and try to reconstruct the image accounting for the rotation!")
 

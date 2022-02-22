@@ -206,15 +206,13 @@ def get_rotation_angle(image, plot=False):
         x = line[1][0]-line[0][0]
         vec = x, y
         vec_norm = LA.norm(vec)
-        print(vec, vec_norm)
+        # print(vec, vec_norm)
 
         if vec[0] != 0 and vec[1] != 0:
             ang = (np.rad2deg(np.arctan(y/x)))
             prob_angles.append(ang)
-    #     else:
-    #         prob_angles.append(0)
-        print(vec, vec_norm, ang)
-    return (np.mean(prob_angles))
+
+    return np.mean(prob_angles)
 
 
 def save_3d_tiff(image, filename="output", path="./"):
