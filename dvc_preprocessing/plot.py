@@ -4,7 +4,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-import matplotlib.colors as cm
 from skimage import exposure
 import os
 from . import constants as const
@@ -71,25 +70,24 @@ def plot_CoM(image, CoM: tuple):
     ax.scatter(CoM[1], CoM[0], s=160, c='C0', marker='+')
     plt.show()
 
-def plot_lines(image, edges, lines):
+def plot_angle_detection(image, edges, lines):
     # Generating figure 2
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharex=True, sharey=True)
+    
+    if len(lines) == 0:
+        return 0
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5), sharex=True, sharey=True)
     ax = axes.ravel()
 
-    ax[0].imshow(image, cmap=cm.gray)
+    ax[0].imshow(image, cmap="gray")
     ax[0].set_title('Input image')
 
-    ax[1].imshow(edges, cmap=cm.gray)
-    ax[1].set_title('Canny edges')
+    ax[1].imshow(edges, cmap="gray")
+    ax[1].set_title('Canny edges and detected lines')
 
-    ax[2].imshow(edges * 0)
     for line in lines:
         p0, p1 = line
-        ax[2].plot((p0[0], p1[0]), (p0[1], p1[1]))
-    ax[2].set_xlim((0, image.shape[1]))
-    ax[2].set_ylim((image.shape[0], 0))
-    ax[2].set_title('Probabilistic Hough')
-
+        ax[1].plot((p0[0], p1[0]), (p0[1], p1[1]))
+    
     for a in ax:
         a.set_axis_off()
 

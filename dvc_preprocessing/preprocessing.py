@@ -2,7 +2,6 @@
 # coding: utf-8
 
 import matplotlib.pyplot as plt
-# import matplotlib.image as mpimg
 import numpy as np
 import h5py
 import skimage.io as skio
@@ -13,6 +12,7 @@ from skimage.transform import probabilistic_hough_line
 from numpy import linalg as LA
 import os
 import copy
+from . import plot as prplot
 
 """
 
@@ -189,6 +189,13 @@ def crop_around_CoM(image, CoM: tuple, slices='all', xprop=0.25, yprop=0.25):
 
 
 def get_rotation_angle(image, plot=False):
+    
+    '''
+    This function gets the rotation angle from the image averaged along the Z axis (axis=0 in np).
+    Inputs
+    
+    image - the stack image 
+    '''
 
     # Line finding using the Probabilistic Hough Transform
     img = copy.deepcopy(image)
@@ -211,6 +218,9 @@ def get_rotation_angle(image, plot=False):
         if vec[0] != 0 and vec[1] != 0:
             ang = (np.rad2deg(np.arctan(y/x)))
             prob_angles.append(ang)
+            
+    if plot == True:
+        prplot.plot_angle_detection(img, edges, lines)
 
     return np.mean(prob_angles)
 
