@@ -211,7 +211,7 @@ def get_rotation_angle(image, plot=False, canny_sigma=30, hough_thrs=5, line_len
     edges = edges[int(0.05*x):int(0.95*x), int(0.05*y):int(0.95*y)]
     img = img[int(0.05*x):int(0.95*x), int(0.05*y):int(0.95*y)]
     lines = probabilistic_hough_line(edges, hough_thrs, line_len,
-                                     line_gap)
+                                     line_gap, seed =2)
     prob_angles = []
 
     for line in lines:
