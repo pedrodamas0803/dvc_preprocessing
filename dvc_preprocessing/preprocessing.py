@@ -188,24 +188,30 @@ def crop_around_CoM(image, CoM: tuple, slices='all', xprop=0.25, yprop=0.25):
     return image[start:end, ymin:ymax, xmin:xmax]
 
 
-def get_rotation_angle(image, plot=False):
+def get_rotation_angle(image, plot=False, canny_sigma=30, hough_thrs=5, line_len=150, line_gap=10, mean = True):
     
     '''
     This function gets the rotation angle from the image averaged along the Z axis (axis=0 in np).
     Inputs
     
-    image - the stack image 
+    image - the stack image
+    plot - False by default. If True plots the image together with the detected edges and the calculated lines.
+    canny_sigma - the standard deviation for the Gaussian filter used in the Canny edge detector.
+    hough_thrs - threshold for the determination of the lines by probabilistic line Hough transform.
+    line_len - minimum length accepted for the detected lines.
+    line_gap - maximum gap between two pixels to still be considered a line.
+    mean - True by default. If set to False it will return the array of calculated angles from the image. True will return the mean of the values. 
     '''
 
     # Line finding using the Probabilistic Hough Transform
     img = copy.deepcopy(image)
     img = img.mean(axis=0)
-    edges = canny(img, 30)
+    edges = canny(img, canny_sigma)
     x, y = edges.shape
     edges = edges[int(0.05*x):int(0.95*x), int(0.05*y):int(0.95*y)]
     img = img[int(0.05*x):int(0.95*x), int(0.05*y):int(0.95*y)]
-    lines = probabilistic_hough_line(edges, threshold=5, line_length=150,
-                                     line_gap=10)
+    lines = probabilistic_hough_line(edges, hough_thrs, line_len,
+                                     line_gap)
     prob_angles = []
 
     for line in lines:
@@ -222,7 +228,10 @@ def get_rotation_angle(image, plot=False):
     if plot == True:
         prplot.plot_angle_detection(img, edges, lines)
 
-    return np.mean(prob_angles)
+    if not mean:
+        return prob_angles
+    else:
+        return np.mean(prob_angles)
 
 
 def save_3d_tiff(image, filename="output", path="./"):
