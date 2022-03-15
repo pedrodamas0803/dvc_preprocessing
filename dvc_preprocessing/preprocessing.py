@@ -224,14 +224,21 @@ def get_rotation_angle(image, plot=False, canny_sigma=30, hough_thrs=5, line_len
         if vec[0] != 0 and vec[1] != 0:
             ang = (np.rad2deg(np.arctan(y/x)))
             prob_angles.append(ang)
+
+    corr_ang = []
+    for angle in prob_angles:
+        if angle < 0:
+            corr_ang.append(angle+90)
+        else:
+            corr_ang.append(angle)
             
     if plot == True:
         prplot.plot_angle_detection(img, edges, lines)
 
     if not mean:
-        return prob_angles
+        return corr_ang
     else:
-        return np.mean(prob_angles)
+        return np.mean(np.mean(corr_ang))
 
 
 def save_3d_tiff(image, filename="output", path="./"):
