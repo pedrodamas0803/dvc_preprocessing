@@ -2,11 +2,13 @@
 # coding: utf-8
 
 from inspect import stack
+from winreg import SaveKey
 import matplotlib.pyplot as plt
 import numpy as np
 import h5py
 import skimage.io as skio
 from skimage import exposure, filters
+from skimage.util import img_as_int, img_as_ubyte
 from skimage.measure import regionprops
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
@@ -39,15 +41,18 @@ def read_images_from_h5(filename, dirpath="./"):
 
     return stack_img
 
-def convert_stack(stack_image, data_type = np.int16):
+def convert_stack(image, data_type = 'int16'):
 
     """
     Converts the data type from the original reconstruction. By default nabu spits out images in np.int32.
     """
 
-    if data_type not in [np.int8, np.int16]:
+    if data_type not in ['int8', 'int16']:
         raise TypeError("Your image won't be suitable for DVC")
-    return stack_image.astype(data_type)
+    elif data_type == 'int8':
+        return img_as_ubyte(image)
+
+    return img_as_int(image)
 
 
 
