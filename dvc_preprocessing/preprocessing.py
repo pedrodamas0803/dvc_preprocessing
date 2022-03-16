@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from inspect import stack
-from winreg import SaveKey
 import matplotlib.pyplot as plt
 import numpy as np
 import h5py
@@ -49,6 +47,7 @@ def convert_stack(image, data_type = 'int16'):
 
     if data_type not in ['int8', 'int16']:
         raise TypeError("Your image won't be suitable for DVC")
+
     elif data_type == 'int8':
         return img_as_ubyte(image)
 
