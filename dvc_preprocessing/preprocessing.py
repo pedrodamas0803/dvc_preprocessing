@@ -22,7 +22,7 @@ Routine to preprocess PCT reconstructions to perform DVC analysis
 """
 
 
-def read_images_from_h5(filename, dirpath="./"):
+def read_images_from_h5(filename, data_type = 'int16', dirpath="./"):
     """
     Returns the stack image of the reconstructed volume
     Ideally you should provide the hdf5 file provided after nabu volume reconstruction for data entry consistency.
@@ -33,25 +33,31 @@ def read_images_from_h5(filename, dirpath="./"):
     dirpath - the directory where the h5 named 'filename' is found
 
     """
-
+    if data_type not in ['int8', 'int16']:
+        raise TypeError("Your image won't be suitable for DVC analysis. Choose between data_type = int8 or int16.")
     with h5py.File(os.path.join(dirpath, filename)) as h5:
         stack_img = h5['entry0000']['reconstruction']['results']['data'][:]
 
-    return stack_img
+    if data_type == 'int8':
 
-def convert_stack(image, data_type = 'int16'):
+        return img_as_ubyte(stack_img)
 
-    """
-    Converts the data type from the original reconstruction. By default nabu spits out images in np.int32.
-    """
 
-    if data_type not in ['int8', 'int16']:
-        raise TypeError("Your image won't be suitable for DVC")
+    return img_as_int(stack_img)
 
-    elif data_type == 'int8':
-        return img_as_ubyte(image)
+# def convert_stack(image, data_type = 'int16'):
 
-    return img_as_int(image)
+#     """
+#     Converts the data type from the original reconstruction. By default nabu spits out images in np.int32.
+#     """
+
+#     if data_type not in ['int8', 'int16']:
+#         raise TypeError("Your image won't be suitable for DVC")
+
+#     elif data_type == 'int8':
+#         return img_as_ubyte(image)
+
+#     return img_as_int(image)
 
 
 
