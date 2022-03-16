@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+from inspect import stack
 import matplotlib.pyplot as plt
 import numpy as np
 import h5py
@@ -21,7 +22,7 @@ Routine to preprocess PCT reconstructions to perform DVC analysis
 """
 
 
-def read_images_from_h5(filename, data_type=np.int16, dirpath="./"):
+def read_images_from_h5(filename, dirpath="./"):
     """
     Returns the stack image of the reconstructed volume
     Ideally you should provide the hdf5 file provided after nabu volume reconstruction for data entry consistency.
@@ -33,14 +34,21 @@ def read_images_from_h5(filename, data_type=np.int16, dirpath="./"):
 
     """
 
-    if data_type not in [np.int8, np.int16]:
-        raise Warning("Your data might not be suitable for DVC")
-        return
-
     with h5py.File(os.path.join(dirpath, filename)) as h5:
         stack_img = h5['entry0000']['reconstruction']['results']['data'][:]
 
-    return stack_img.astype(data_type)
+    return stack_img
+
+def convert_stack(stack_image, data_type = np.int16):
+
+    """
+    Converts the data type from the original reconstruction. By default nabu spits out images in np.int32.
+    """
+
+    if data_type not in [np.int8, np.int16]:
+        raise TypeError("Your image won't be suitable for DVC")
+    return stack_image.astype(data_type)
+
 
 
 def crop_slice(image, slice_number, xmin, xmax, ymin, ymax):
