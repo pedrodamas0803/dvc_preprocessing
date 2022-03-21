@@ -283,4 +283,4 @@ def save_3d_subset_tiff(image, init_slice, end_slice, filename, path="./"):
     x, y, z = image.shape
     image_3d = skio.concatenate_images(image[init_slice:end_slice])
     skio.imsave(os.path.join(
-        path, f"{filename}_{x}_{y}_{z}.tiff"), arr=image_3d, plugin="tifffile")
+        path, f"{filename}_{x-init_slice}_{y}_{z}.tiff"), arr=image_3d, plugin="tifffile")
