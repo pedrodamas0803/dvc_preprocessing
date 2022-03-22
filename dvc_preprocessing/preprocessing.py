@@ -6,7 +6,7 @@ import numpy as np
 import h5py
 import skimage.io as skio
 from skimage import exposure, filters
-from skimage.util import img_as_int, img_as_ubyte
+# from skimage.util.dtype import img_as_int, img_as_ubyte
 from skimage.measure import regionprops
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
@@ -33,7 +33,7 @@ def read_images_from_h5(filename, data_type = 'int16', dirpath="./"):
     dirpath - the directory where the h5 named 'filename' is found
 
     """
-    if data_type not in ['int8', 'int16']:
+    if data_type not in ['int8', 'int16', 'original']:
         raise TypeError("Your image won't be suitable for DVC analysis. Choose between data_type = int8 or int16.")
 
     with h5py.File(os.path.join(dirpath, filename)) as h5:
@@ -41,7 +41,7 @@ def read_images_from_h5(filename, data_type = 'int16', dirpath="./"):
 
     if data_type == 'int8':
 
-        return img_as_ubyte(stack_img)
+        return stack_img.astype(np.int8)
         
     elif data_type == 'original':
         
@@ -49,7 +49,7 @@ def read_images_from_h5(filename, data_type = 'int16', dirpath="./"):
         
     else:
 
-        return img_as_int(stack_img)
+        return stack_img.astype(np.int16)
 
 # def convert_stack(image, data_type = 'int16'):
 
