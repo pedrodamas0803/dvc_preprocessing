@@ -5,7 +5,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from skimage import exposure
-import os
 from . import constants as const
 
 def plot_image(image, colormap="gray", name="sample", figsize=const.FIGSIZE()):
@@ -53,13 +52,14 @@ def plot_histogram(image, hist=False, figsize=const.FIGSIZE()):
     if hist == True:
         return counts, bins
     
-def plot_CoM(image, CoM: tuple):
+def plot_CoM(image, CoM: tuple, cmap='gray'):
     '''
     Plots the original slice displaying the coordinates of the center of mass.
 
     Inputs
     image - again, the slice! 
     CoM - a tuple containing the center of mass (ideally calculated by volume_CoM() for the volume or find_center_of_mass() for a single slice)
+    cmap - colormap to use when plotting the image, you can choose from matplotlib.pyplot options
 
     Outputs
     Display the image of a given slice and the coordinates of CoM
@@ -67,7 +67,7 @@ def plot_CoM(image, CoM: tuple):
 
     fig, ax = plt.subplots()
     ax.imshow(image)
-    ax.scatter(CoM[1], CoM[0], s=160, c='C0', marker='+')
+    ax.scatter(CoM[1], CoM[0], s=160, c='C0', marker='+', cmap='gray')
     plt.show()
 
 def plot_angle_detection(image, edges, lines):

@@ -29,21 +29,27 @@ def read_images_from_h5(filename, data_type = 'int16', dirpath="./"):
     Inputs
 
     filename - string with the h5 file name 
-    data_type - data type from the returned stack image, whether np.int8 or np.int16
+    data_type - data type from the returned stack image, whether 'int8', 'int16', or 'original'. The latter will import the original type without casting
     dirpath - the directory where the h5 named 'filename' is found
 
     """
     if data_type not in ['int8', 'int16']:
         raise TypeError("Your image won't be suitable for DVC analysis. Choose between data_type = int8 or int16.")
+
     with h5py.File(os.path.join(dirpath, filename)) as h5:
         stack_img = h5['entry0000']['reconstruction']['results']['data'][:]
 
     if data_type == 'int8':
 
         return img_as_ubyte(stack_img)
+        
+    elif data_type == 'original':
+        
+        return stack_img
+        
+    else:
 
-
-    return img_as_int(stack_img)
+        return img_as_int(stack_img)
 
 # def convert_stack(image, data_type = 'int16'):
 
@@ -278,6 +284,14 @@ def save_3d_tiff(image, filename="output", path="./"):
 def save_3d_subset_tiff(image, init_slice, end_slice, filename, path="./"):
     '''
     Saves a subset of slices in a tomo result.
+
+    Inputs
+
+    image - stack image to be sliced and saved
+    init_slice - first slice of the stack to be saved as tiff
+    end_slice - last slice of the stack to be saved as tiff
+    filename - stem for the filename that will be added with the shape of the image
+    path - path to the directory where you want to save tour image
     '''
 
     x, y, z = image.shape
