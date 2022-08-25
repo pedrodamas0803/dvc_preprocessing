@@ -34,7 +34,7 @@ def plot_slice_from_stack(image, slice_number=None, colormap="gray", figsize=con
     plt.title(f"Plot of slice {slice_number}")
     plt.show()
     
-def plot_histogram(image, hist=False, figsize=const.FIGSIZE()):
+def plot_histogram(image, hist=False, adjust=True, figsize=const.FIGSIZE()):
     '''
     Plots the intensity histogram for the stack image
 
@@ -44,6 +44,10 @@ def plot_histogram(image, hist=False, figsize=const.FIGSIZE()):
     '''
 
     counts, bins = exposure.histogram(image)
+    if adjust:
+        counts[0]=counts[1]
+        counts[-1] = counts[-2]
+        
     plt.figure(figsize=figsize)
     plt.plot(bins, counts, color="red")
     plt.title("Histogram of stack image")

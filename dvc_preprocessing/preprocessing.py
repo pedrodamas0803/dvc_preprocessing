@@ -1,18 +1,22 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import os
+import copy
+
 import matplotlib.pyplot as plt
 import numpy as np
 import h5py
+
+
+from scipy.signal import find_peaks
 import skimage.io as skio
 from skimage import exposure, filters
-# from skimage.util.dtype import img_as_int, img_as_ubyte
 from skimage.measure import regionprops
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
 from numpy import linalg as LA
-import os
-import copy
+
 from . import plot as prplot
 
 """
@@ -22,48 +26,30 @@ Routine to preprocess PCT reconstructions to perform DVC analysis
 """
 
 
-def read_images_from_h5(filename, data_type = 'int16', dirpath="./"):
+def read_images_from_h5(filename: str, entry : str, out_type = None):
     """
     Returns the stack image of the reconstructed volume
     Ideally you should provide the hdf5 file provided after nabu volume reconstruction for data entry consistency.
     Inputs
 
-    filename - string with the h5 file name 
-    data_type - data type from the returned stack image, whether 'int8', 'int16', or 'original'. The latter will import the original type without casting
-    dirpath - the directory where the h5 named 'filename' is found
+    filename - string with the h5 file path 
+    out_type - data type from the returned stack image
 
     """
-    if data_type not in ['int8', 'int16', 'original']:
-        raise TypeError("Your image won't be suitable for DVC analysis. Choose between data_type = int8 or int16.")
 
-    with h5py.File(os.path.join(dirpath, filename)) as h5:
-        stack_img = h5['entry0000']['reconstruction']['results']['data'][:]
+    with h5py.File(filename, 'r') as hin:
+        if out_type is not None:
+            stack_img = hin[entry][:].astype(out_type)
+        else:
+            stack_img = hin[entry][:]
+    return stack_img
 
-    if data_type == 'int8':
 
-        return stack_img.astype(np.int8)
-        
-    elif data_type == 'original':
-        
-        return stack_img
-        
-    else:
+def calculate_threshold(image, nbins=256):
 
-        return stack_img.astype(np.int16)
-
-# def convert_stack(image, data_type = 'int16'):
-
-#     """
-#     Converts the data type from the original reconstruction. By default nabu spits out images in np.int32.
-#     """
-
-#     if data_type not in ['int8', 'int16']:
-#         raise TypeError("Your image won't be suitable for DVC")
-
-#     elif data_type == 'int8':
-#         return img_as_ubyte(image)
-
-#     return img_as_int(image)
+    thrs = filters.threshold_otsu(image, nbins)
+    
+    return thrs
 
 
 
@@ -94,8 +80,66 @@ def crop_stack(image, xmin, xmax, ymin, ymax):
 
     return image[:, ymin:ymax, xmin:xmax]
 
+def get_hist(image):
 
-def intensity_rescaling(image, low_perc=1, high_perc=99):
+    '''
+    Get's the histogram of an image.
+
+    Inputs
+    image - the image to be used
+    plot - if True, plots the histogram
+
+    Returns
+    counts - array of counting values for each bin of the histogram
+    bins - array of the center of the bins of the histogram 
+    '''
+    counts, bins = exposure.histogram(image)
+    
+    return counts, bins
+
+def find_peak_position(image, height = 1e4, retrn_counts = False):
+    '''
+    Finds the position of the peaks in a histogram of an image.
+
+    Inputs  
+    image - the image to be used
+    height - the height of what should be considered as peaks in the curve
+    retrn_counts - if True, returns the frequency associated to that peak position
+
+    Outputs
+    peaks - list of the peak positions. If retrn_counts == True, return tuples containing the counts.  
+    '''
+
+    counts, bins = get_hist(image, plot=False)
+
+    peaks, _ = find_peaks(counts, height=height)
+    peak_pos = []
+    for peak in peaks:
+        peak_pos.append(bins[peak])
+    if not retrn_counts:
+        return peak_pos
+    else:
+        return [(bins[peak], counts[peak]) for peak in peaks]
+
+def calc_color_lims(img, mult = 3):
+
+    '''
+    Calculates the upper and lower limits to plot an image with centered value on the brightest peak of the histogram.
+
+    Inputs
+    image - the image!
+    mult - stretching/shrinking factor that defines the amplitude of vmax-vmin by using peak +/- mult*std
+
+    Outputs
+    vmin, vmax - tuple with the lower and upper limits. 
+    '''
+    peaks = find_peak_position(img)
+    vmin = peaks[-1] - mult * img.std()
+    vmax = peaks[-1] + mult * img.std()
+    
+    return vmin, vmax
+
+def intensity_rescaling(image, in_range: str or tuple = 'image' ,mult = 3,  out_type = 'uint8'):
     '''
     Rescales the intensity of the stack image according to the chosen percentiles 
 
@@ -105,9 +149,12 @@ def intensity_rescaling(image, low_perc=1, high_perc=99):
     low_perc, high_perc - low and high percentiles to use as parameters to rescale the images
     '''
 
-    plow, phigh = np.percentile(image, (low_perc, high_perc))
 
-    rescaled_image = exposure.rescale_intensity(image, in_range=(plow, phigh))
+    if in_range != 'image':
+        imin, imax = calc_color_lims(image, mult = mult)
+        rescaled_image = exposure.rescale_intensity(image, in_range=(imin, imax), out_range=out_type)
+    else:
+        rescaled_image = exposure.rescale_intensity(image, in_range=in_range, out_range=out_type)
 
     return rescaled_image
 
@@ -161,7 +208,7 @@ def volume_CoM(image, init_slice=0, final_slice='last'):
     return np.mean(y), np.mean(x)
 
 
-def crop_around_CoM(image, CoM: tuple, slices='all', xprop=0.25, yprop=0.25):
+def crop_around_CoM(image, CoM: tuple, slices=None, xprop=0.25, yprop=0.25):
     '''
     This function will return the image of an slice cut with parameters relative to the calculated center of mass
 
@@ -171,40 +218,35 @@ def crop_around_CoM(image, CoM: tuple, slices='all', xprop=0.25, yprop=0.25):
     slices - tuple containing the starting 
     '''
     zlen, xlen, ylen = image.shape
-    #if image.shape == 3:
-    #   zlen, xlen, ylen = image.shape
-    #else:
-    #    xlen, ylen = image.shape
-    #    zlen = 0
 
-    if slices != 'all':
-        assert type(slices) == tuple
-        start = slices[0]
-        end = slices[1] + 1
+    if slices is None:
+        start = int(0)
+        end = int(zlen - 1)
     else:
-        start = 0
-        end = zlen
-
+        assert type(slices) == tuple
+        start = int(slices[0])
+        end = int(slices[1] - 1)
+        
     xcom = CoM[1]
     ycom = CoM[0]
 
-    xmin = xcom - (xlen * xprop)
-    xmax = xcom + (xlen * xprop)
-    ymin = ycom - (ylen * yprop)
-    ymax = ycom + (ylen * yprop)
+    xmin = np.ceil(xcom - (xlen * xprop)/2)
+    xmax = np.floor(xcom + (xlen * xprop)/2)
+    ymin = np.ceil(ycom - (ylen * yprop)/2)
+    ymax = np.floor(ycom + (ylen * yprop)/2)
 
     if xmin < 0:
-        xmin = 0
+        xmin = int(0)
     elif xmax > xlen:
-        xmax = xlen
+        xmax = int(xlen - 1)
     else:
         xmin = int(xmin)
         xmax = int(xmax)
 
     if ymin < 0:
-        ymin = 0
+        ymin = int(0)
     elif ymax > ylen:
-        ymax = ylen
+        ymax = int(ylen - 1)
     else:
         ymin = int(ymin)
         ymax = int(ymax)
