@@ -229,7 +229,8 @@ def get_rotation_angle(image, plot=False, canny_sigma=30, hough_thrs=5, line_len
 
     # Line finding using the Probabilistic Hough Transform
     img = copy.deepcopy(image)
-    img = img.mean(axis=0)
+    if img.ndim == 3:
+        img = img.mean(axis=0)
     edges = canny(img, canny_sigma)
     x, y = edges.shape
     edges = edges[int(0.05*x):int(0.95*x), int(0.05*y):int(0.95*y)]
