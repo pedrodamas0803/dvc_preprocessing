@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import concurrent.futures
+
 import matplotlib.pyplot as plt
 import numpy as np
 import h5py
@@ -112,7 +114,7 @@ def intensity_rescaling(image, low_perc=1, high_perc=99):
     return rescaled_image
 
 
-def _find_center_of_mass(image):
+def _find_center_of_mass(image:np.ndarray):
     '''
     Finds the center of mass of the image after applying Otsu's thresholding algorithm
 
@@ -131,7 +133,7 @@ def _find_center_of_mass(image):
     return weighted_center_of_mass
 
 
-def volume_CoM(image, init_slice=0, final_slice='last'):
+def volume_CoM(image:np.ndarray, slab_size:int = 600):
     '''
     Calculates the average coordinates of the center of mass calculated over the range init_slice to final_slice
 
@@ -145,23 +147,23 @@ def volume_CoM(image, init_slice=0, final_slice='last'):
     coordinates of the weighted center of mass in the form Y, X for consistency with matplotlib.pyplot
 
     '''
-    if final_slice == 'last':
-        final_slice = len(image[0])
+    nz, ny, nx = image.shape
 
-    size = final_slice - init_slice
-    x = np.array(np.empty(size))
-    y = np.array(np.empty(size))
+    vol = image[(nz//2 - slab_size//2):(nz//2+slab_size//2)]
+    print(vol.shape)
+    x = np.zeros(slab_size)
+    y = np.zeros(slab_size)
 
-    for i, img in enumerate(range(init_slice, final_slice)):
+    with concurrent.futures.ProcessPoolExecutor() as pool:
 
-        center = _find_center_of_mass(image[img])
-        x[i] = center[1]
-        y[i] = center[0]
+        for ii, result in enumerate(pool.map(_find_center_of_mass, vol)):
+
+            y[ii], x[ii] = result
 
     return np.mean(y), np.mean(x)
 
 
-def crop_around_CoM(image, CoM: tuple, slices='all', xprop=0.25, yprop=0.25):
+def crop_around_CoM(image:np.ndarray, CoM: tuple, zprop:float = 1, xprop:float = 0.25, yprop:float = 0.25):
     '''
     This function will return the image of an slice cut with parameters relative to the calculated center of mass
 
@@ -170,46 +172,38 @@ def crop_around_CoM(image, CoM: tuple, slices='all', xprop=0.25, yprop=0.25):
     CoM - coordinates of the center of mass as a tuple
     slices - tuple containing the starting 
     '''
-    zlen, xlen, ylen = image.shape
-    #if image.shape == 3:
-    #   zlen, xlen, ylen = image.shape
-    #else:
-    #    xlen, ylen = image.shape
-    #    zlen = 0
+    try:
+        zlen, ylen, xlen = image.shape
+    except ValueError:
+        ylen, xlen = image.shape
+    
+    
+    ycom, xcom = CoM
+    zcom = zlen // 2
 
-    if slices != 'all':
-        assert type(slices) == tuple
-        start = slices[0]
-        end = slices[1] + 1
-    else:
-        start = 0
-        end = zlen
-
-    xcom = CoM[1]
-    ycom = CoM[0]
-
-    xmin = xcom - (xlen * xprop)
-    xmax = xcom + (xlen * xprop)
-    ymin = ycom - (ylen * yprop)
-    ymax = ycom + (ylen * yprop)
+    xmin = int(np.ceil(xcom - (xlen * xprop)))
+    xmax = int(np.floor(xcom + (xlen * xprop)))
+    ymin = int(np.ceil(ycom - (ylen * yprop)))
+    ymax = int(np.floor(ycom + (ylen * yprop)))
+    zmin = int(np.ceil(zcom - (zlen * zprop)))
+    zmax = int(np.floor(zcom + (zlen * zprop)))
 
     if xmin < 0:
         xmin = 0
-    elif xmax > xlen:
+    if xmax > xlen:
         xmax = xlen
-    else:
-        xmin = int(xmin)
-        xmax = int(xmax)
-
+    
     if ymin < 0:
         ymin = 0
-    elif ymax > ylen:
+    if ymax > ylen:
         ymax = ylen
-    else:
-        ymin = int(ymin)
-        ymax = int(ymax)
+    
+    if zmin < 0:
+        zmin=0
+    if zmax > zlen:
+        zmax = zlen
 
-    return image[start:end, ymin:ymax, xmin:xmax]
+    return image[zmin:zmax, ymin:ymax, xmin:xmax]
 
 
 def get_rotation_angle(image, plot=False, canny_sigma=30, hough_thrs=5, line_len=150, line_gap=10, mean = True):

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import concurrent.futures
+
 import matplotlib.pyplot as plt
 import numpy as np
 import h5py
@@ -131,7 +133,7 @@ def _find_center_of_mass(image):
     return weighted_center_of_mass
 
 
-def volume_CoM(image, init_slice=0, final_slice='last'):
+def volume_CoM(image, slab_size = 600):
     '''
     Calculates the average coordinates of the center of mass calculated over the range init_slice to final_slice
 
@@ -145,18 +147,24 @@ def volume_CoM(image, init_slice=0, final_slice='last'):
     coordinates of the weighted center of mass in the form Y, X for consistency with matplotlib.pyplot
 
     '''
-    if final_slice == 'last':
-        final_slice = len(image[0])
+    nz, ny, nx = image.shape
 
-    size = final_slice - init_slice
-    x = np.array(np.empty(size))
-    y = np.array(np.empty(size))
+    vol = image[(nz//2 - slab_size//2):(nz//2+slab_size//2)]
+    print(vol.shape)
+    x = np.zeros(slab_size)
+    y = np.zeros(slab_size)
 
-    for i, img in enumerate(range(init_slice, final_slice)):
+    with concurrent.futures.ProcessPoolExecutor() as pool:
 
-        center = _find_center_of_mass(image[img])
-        x[i] = center[1]
-        y[i] = center[0]
+        for ii, result in enumerate(pool.map(_find_center_of_mass, vol)):
+
+            # center = _find_center_of_mass(image[img])
+            # u, v = result
+            y[ii], x[ii] = result
+
+            # y[ii] = u
+            # x[ii] = v
+            # #  = results[ii, 0]
 
     return np.mean(y), np.mean(x)
 
