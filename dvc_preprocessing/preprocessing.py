@@ -133,7 +133,8 @@ def _find_center_of_mass(image:np.ndarray):
     return weighted_center_of_mass
 
 
-def volume_CoM(image:np.ndarray, slab_size:int = 600):
+def volume_CoM(image:np.ndarray, slab_size:int = 600): 
+   
     '''
     Calculates the average coordinates of the center of mass calculated over the range init_slice to final_slice
 
