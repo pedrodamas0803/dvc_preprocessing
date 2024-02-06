@@ -234,10 +234,10 @@ def crop_around_CoM(image, CoM: tuple, slices=None, xprop=0.25, yprop=0.25):
     xcom = CoM[1]
     ycom = CoM[0]
 
-    xmin = np.ceil(xcom - (xlen * xprop) // 2)
-    xmax = np.floor(xcom + (xlen * xprop) // 2)
-    ymin = np.ceil(ycom - (ylen * yprop) // 2)
-    ymax = np.floor(ycom + (ylen * yprop) // 2)
+    xmin = int(np.ceil(xcom - (xlen * xprop) // 2))
+    xmax = int(np.floor(xcom + (xlen * xprop) // 2))
+    ymin = int(np.ceil(ycom - (ylen * yprop) // 2))
+    ymax = int(np.floor(ycom + (ylen * yprop) // 2))
 
     if xmin < 0:
         xmin = int(0)
